@@ -10,6 +10,8 @@ menuToggle.addEventListener('click', function (event) {
   menu.classList.toggle('visible');
 })
 
+const regExpValidEmail = /^\w+@\w+\.\w{2,}$/;
+
 const loginElem = document.querySelector('.login');
 const loginForm = document.querySelector('.login-form');
 const emailInput = document.querySelector('.login-email');
@@ -18,6 +20,14 @@ const loginSignUp = document.querySelector('.login-signup');
 
 const userElem = document.querySelector('.user');
 const userNameElem = document.querySelector('.user-name');
+
+const exitElem = document.querySelector('.exit');
+const editElem = document.querySelector('.edit');
+const editContainer = document.querySelector('.edit-container');
+
+const editUserName = document.querySelector('.edit-username');
+const editUserPhoto = document.querySelector('.edit-photo');
+const userAvatarElem = document.querySelector('.user-avatar');
 
 const listUsers = [
   {
@@ -35,6 +45,10 @@ const listUsers = [
 const setUsers = {
   user: null,
   logIn(email, password, handler) {
+    if (!regExpValidEmail.test(email)) {
+      alert('Email не валидный')
+      return;
+    }
     const user = this.getUser(email);
     if (user && user.password === password) {
       this.authorizedUser(user)
@@ -43,10 +57,20 @@ const setUsers = {
       alert('Пользователь с такими данными не найден');
     }
   },
-  logOut() {
-    console.log('выход');
+  logOut(handler) {
+    this.user = null;
+    handler();
   },
   signUp(email, password, handler) {
+    if (!regExpValidEmail.test(email)) {
+      alert('Email не валидный')
+      return;
+    }
+
+    if (!email.trim() || !password.trim()) {
+      alert('Введите данные');
+      return;
+    }
     if (!this.getUser(email)) {
       const user = { email, password, displayName: email.split('@')[0] };
       listUsers.push(user);
@@ -56,6 +80,16 @@ const setUsers = {
     } else {
       alert('Пользователь с таким email уже зарегистрирован')
     }
+  },
+  editUser(userName, userPhoto, handler) {
+    if (userName) {
+      this.user.displayName = userName;
+    }
+    if (userPhoto) {
+      this.user.photo = userPhoto;
+    }
+
+    handler();
   },
   getUser(email) {
     return listUsers.find((item) => {
@@ -74,6 +108,7 @@ const toggleAuthDom = () => {
     loginElem.style.display = 'none';
     userElem.style.display = '';
     userNameElem.textContent = user.displayName;
+    userAvatarElem.src = user.photo || userAvatarElem.src;
   } else {
     loginElem.style.display = '';
     userElem.style.display = 'none';
@@ -87,6 +122,7 @@ loginForm.addEventListener('submit', (event) => {
   const passwordValue = passwordInput.value;
 
   setUsers.logIn(emailValue, passwordValue, toggleAuthDom);
+  loginForm.reset();
 });
 
 loginSignUp.addEventListener('click', (event) => {
@@ -96,6 +132,24 @@ loginSignUp.addEventListener('click', (event) => {
   const passwordValue = passwordInput.value;
 
   setUsers.signUp(emailValue, passwordValue, toggleAuthDom);
+  loginForm.reset();
 })
 
+exitElem.addEventListener('click', (event) => {
+  event.preventDefault();
+  setUsers.logOut(toggleAuthDom);
+});
+
+editElem.addEventListener('click', (event) => {
+  event.preventDefault();
+  editContainer.classList.toggle('visible');
+  editUserName.value = setUsers.user.displayName;
+});
+
+editContainer.addEventListener('submit', (event) => {
+  event.preventDefault();
+
+  setUsers.editUser(editUserName.value, editUserPhoto.value, toggleAuthDom);
+  editContainer.classList.remove('visible');
+})
 toggleAuthDom();
