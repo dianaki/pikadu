@@ -1,3 +1,16 @@
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyARX4-SJ4cXmTFl4lfHFSrG5qnzy-gFW_U",
+  authDomain: "pikadu-23808.firebaseapp.com",
+  databaseURL: "https://pikadu-23808.firebaseio.com",
+  projectId: "pikadu-23808",
+  storageBucket: "pikadu-23808.appspot.com",
+  messagingSenderId: "852951550977",
+  appId: "1:852951550977:web:122cfed56df1db4b2e8400"
+};
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
 // Создаем переменную, в которую положим кнопку меню
 let menuToggle = document.querySelector('#menu-toggle');
 // Создаем переменную, в которую положим меню
@@ -10,30 +23,31 @@ const loginForm = document.querySelector('.login-form');
 const emailInput = document.querySelector('.login-email');
 const passwordInput = document.querySelector('.login-password');
 const loginSignUp = document.querySelector('.login-signup');
-
 const userElem = document.querySelector('.user');
 const userNameElem = document.querySelector('.user-name');
-
 const exitElem = document.querySelector('.exit');
 const editElem = document.querySelector('.edit');
 const editContainer = document.querySelector('.edit-container');
-
 const editUserName = document.querySelector('.edit-username');
 const editUserPhoto = document.querySelector('.edit-photo');
 const userAvatarElem = document.querySelector('.user-avatar');
-
 const postsWrapper = document.querySelector('.posts');
+
+const buttonNewPost = document.querySelector('.button-new-post');
+const addPostElem = document.querySelector('.add-post');
 
 const listUsers = [
   {
     email: 'diana@mail.com',
     password: '12345',
-    displayName: 'DianaJS'
+    displayName: 'DianaJS',
+    photo: 'https://www.alpinabook.ru/upload/resize_cache/iblock/663/700_700_1/663f4c67619485c224c5b149b1f65eab.jpg',
   },
   {
     email: 'sasha@mail.com',
     password: '123456',
-    displayName: 'SashaJava'
+    displayName: 'SashaJava',
+    photo: 'https://icdn.lenta.ru/images/2019/11/01/13/20191101130724350/square_1280_88f54b592eb591cd6252313b5ec3e06d.png',
   }
 ];
 
@@ -101,22 +115,41 @@ const setPosts = {
     {
       title: 'Заголовок поста',
       text: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Laborum tenetur dolores expedita enim illum adipisci eum quae debitis ducimus, consequatur atque officiis odio tempora! Repudiandae dolorum sit repellendus architecto molestias veniam dolorem! Repellendus ut quos ducimus nisi a officiis voluptate culpa accusamus facilis illo eius exercitationem vero dolorem modi temporibus alias, expedita et sunt sit? Dolores doloribus sequi cumque quas',
-      tags: ['#свежее', '#новое', '#горячее', '#мое', '#случайность'],
-      author: 'sasha@mail.com',
+      tags: ['свежее', 'новое', 'горячее', 'мое', 'случайность'],
+      author: { displayName: 'sasha', photo: 'https://icdn.lenta.ru/images/2019/11/01/13/20191101130724350/square_1280_88f54b592eb591cd6252313b5ec3e06d.png' },
       date: '11.11.2020, 20:54:00',
       like: 15,
-      comments: 12
+      comments: 12,
     },
     {
       title: 'Заголовок поста 2',
       text: 'Далеко-далеко за словесными горами в стране гласных и согласных живут рыбные тексты. Языком что рот маленький реторический вершину текстов обеспечивает гор свой назад решила сбить маленькая дорогу жизни рукопись ему букв деревни предложения, ручеек залетают продолжил парадигматическая? Но языком сих пустился, запятой своего его снова решила меня вопроса моей своих пояс коварный, власти диких правилами напоивший они текстов ipsum первую подпоясал? Лучше, щеке подпоясал приставка большого курсивных на берегу своего? Злых, составитель агентство чтовопроса ведущими о решила одна алфавит!',
-      tags: ['#свежее', '#новое', '#мое', '#случайность'],
-      author: 'diana@mail.com',
+      tags: ['свежее', 'новое', 'мое', 'случайность'],
+      author: { displayName: 'diana', photo: 'https://www.alpinabook.ru/upload/resize_cache/iblock/663/700_700_1/663f4c67619485c224c5b149b1f65eab.jpg' },
       date: '10.11.2020, 10:54:00',
       like: 45,
-      comments: 2
-    }
+      comments: 2,
+    },
   ],
+
+  addPost(title, text, tags, handler) {
+    this.allPosts.unshift({
+      title,
+      text, 
+      tags: tags.split(',').map(item => item.trim()),
+      author: {
+        displayName: setUsers.user.displayName,
+        photo: setUsers.user.photo,
+      },
+      date: new Date().toLocaleString(),
+      like: 0,
+      comments: 0,
+    })
+
+    if (handler) {
+      handler();
+    }
+  }
 };
 
 const toggleAuthDom = () => {
@@ -127,16 +160,25 @@ const toggleAuthDom = () => {
     userElem.style.display = '';
     userNameElem.textContent = user.displayName;
     userAvatarElem.src = user.photo || userAvatarElem.src;
+    buttonNewPost.classList.add('visible');
   } else {
     loginElem.style.display = '';
     userElem.style.display = 'none';
+    buttonNewPost.classList.remove('visible');
+    addPostElem.classList.remove('visible');
+    postsWrapper.classList.add('visible');
   }
 };
+
+const showAddPost = () => {
+  addPostElem.classList.add('visible');
+  postsWrapper.classList.remove('visible');
+}
 
 const showAllPosts = () => {
   let postsHTML = '';
 
-  setPosts.allPosts.forEach(({ title, text, date, like, comments, tags }) => {
+  setPosts.allPosts.forEach(({ title, text, date, like, comments, tags, author }) => {
 
     postsHTML += `
     <section class="post">
@@ -144,8 +186,7 @@ const showAllPosts = () => {
         <h2 class="post-title">${title}</h2>
         <p class="post-text">${text}</p>
         <div class="tags">
-          ${tags}
-          <a href="#" class="tag">#свежее</a>
+          ${tags.map(tag => `<a href="#" class="tag">#${tag}</a>`)}
         </div>
       </div>
       <div class="post-footer">
@@ -175,16 +216,19 @@ const showAllPosts = () => {
         </div>
         <div class="post-author">
           <div class="author-about">
-            <a href="#" class="author-username">arteislamov</a>
+            <a href="#" class="author-username">${author.displayName}</a>
             <span class="post-time">${date}</span>
           </div>
-          <a href="#" class="author-link"><img src="img/avatar.jpeg" alt="avatar" class="author-avatar"></a>
+          <a href="#" class="author-link"><img src=${author.photo || "img/avatar.jpeg"} alt="avatar" class="author-avatar"></a>
         </div>
       </div>
     </section>
   `;
   })
   postsWrapper.innerHTML = postsHTML;
+
+  addPostElem.classList.remove('visible');
+  postsWrapper.classList.add('visible');
 };
 
 const init = () => {
@@ -233,6 +277,32 @@ const init = () => {
     // вешаем класс на меню, когда кликнули по кнопке меню 
     menu.classList.toggle('visible');
   })
+
+  buttonNewPost.addEventListener('click', (event) => {
+    event.preventDefault();
+
+    showAddPost();
+  });
+
+  addPostElem.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    const { title, text, tags } = addPostElem.elements;
+    if (title.value.length < 6) {
+      alert ('Слишком короткий заголовок');
+      return;
+    };
+
+    if (text.value.length < 10) {
+      alert ('Слишком короткий пост');
+      return;
+    };
+
+    setPosts.addPost(title.value, text.value, tags.value, showAllPosts);
+
+    addPostElem.classList.remove('visible');
+    addPostElem.reset();
+  });
 
   showAllPosts();
   toggleAuthDom();
